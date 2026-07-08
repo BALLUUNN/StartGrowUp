@@ -118,7 +118,7 @@ jobs:
         if: matrix.language == 'typescript'
         run: |
           npm install --no-save typescript @bufbuild/protobuf @grpc/grpc-js @types/node
-          npx tsc --noEmit --module commonjs --moduleResolution node --target es2020 --lib es2020 --types node $(find gen/typescript -name "*.ts")
+          npx tsc --noEmit --module node16 --moduleResolution node16 --target es2020 --lib es2020 --types node $(find gen/typescript -name "*.ts")
 
       - name: Setup Java
         if: matrix.language == 'java'
