@@ -36,9 +36,24 @@ Source of truth в репозитории - файлы `.proto`. Каталог 
 
 ## Локальная работа
 
+Перед полным `make verify` или `make check` должны быть установлены:
+
+- `buf` `1.71.0`
+- `go`
+- `python3`
+- `node` и `npm`
+- `javac` и `mvn`
+
+Быстрая самопроверка окружения:
+
+```bash
+make doctor
+```
+
 Основные команды:
 
 ```bash
+make doctor
 make format
 make generate
 make test-generated
@@ -55,7 +70,15 @@ buf breaking --against 'https://github.com/BALLUUNN/startgrowingup-contracts.git
 buf generate
 ```
 
-Файлы в `gen/` не редактируются вручную и не считаются публичным каналом доставки SDK.
+Файлы в `gen/` не редактируются вручную. В обычной разработке они служат локальным output для smoke-проверок, а для версионируемой доставки consumers должны использовать BSR или release assets, описанные ниже.
+
+Если нужен только быстрый schema-loop без всех language smoke-тестов, достаточно:
+
+```bash
+make lint
+make breaking
+make generate
+```
 
 ## Локальные generated outputs
 
@@ -67,7 +90,7 @@ buf generate
 - `gen/typescript/auth/v1`
 - `gen/openapi/api.swagger.json`
 
-Эти артефакты нужны для smoke-проверок, локальной разработки и валидации generation pipeline. Consumers должны забирать версии SDK из BSR, а не из Git.
+Эти артефакты нужны для smoke-проверок, локальной разработки и валидации generation pipeline. Основной путь доставки для published SDK - BSR. Для экосистем, где BSR install flow пока неполный, используются versioned GitHub Release bundles.
 
 ## Использование через BSR
 
@@ -90,6 +113,8 @@ buf.build/gen/go/balluunns/startgrowingup-contracts/{pluginOwner}/{pluginName}
 ```
 
 Перед публикацией consumer-инструкций для Go проверьте точную install-команду на вкладке `SDKs` в BSR. Если нужен надежный BSR-first сценарий для Go, может потребоваться отдельно пересмотреть `go_package` strategy.
+
+Пока BSR-flow для Go не зафиксирован, versioned fallback - asset `startgrowingup-contracts-<tag>-go.tar.gz` в GitHub Releases.
 
 ### Python
 
@@ -153,14 +178,14 @@ balluunns-startgrowingup-contracts-grpc-python
 
 ### TypeScript
 
-Текущий TypeScript plugin `buf.build/community/stephenh-ts-proto` не привязан к package ecosystem в BSR, поэтому native `npm install` для этого generated SDK сейчас не публикуется. Для TypeScript у тебя сейчас два реалистичных варианта:
+Текущий TypeScript plugin `buf.build/community/stephenh-ts-proto` не привязан к package ecosystem в BSR, поэтому native `npm install` для этого generated SDK сейчас не публикуется. Для TypeScript сейчас поддерживаются два реалистичных варианта:
 
-- продолжать использовать локальный `buf generate` и распространять generated TS-код отдельно от BSR;
+- использовать versioned release bundle `startgrowingup-contracts-<tag>-typescript.tar.gz`;
 - перейти на plugin, для которого BSR публикует npm SDK, если нужен полноценный BSR-first install flow.
 
 ### OpenAPI
 
-OpenAPI-файл генерируется локально как `gen/openapi/api.swagger.json`, валидируется в CI, прикладывается к GitHub Release по тегу и публикуется как GitHub Pages site из ветки `main`.
+OpenAPI-файл генерируется локально как `gen/openapi/api.swagger.json`, валидируется в CI, прикладывается к GitHub Release по тегу вместе с архивами generated SDK и публикуется как GitHub Pages site из ветки `main`.
 
 ## Правила совместимости
 

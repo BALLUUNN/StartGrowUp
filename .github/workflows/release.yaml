@@ -12,6 +12,9 @@ concurrency:
   group: github-release-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  BUF_VERSION: "1.71.0"
+
 jobs:
   release:
     name: Create GitHub Release
@@ -29,6 +32,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Generate artifacts
         run: buf generate
@@ -37,6 +41,14 @@ jobs:
         run: |
           mkdir -p dist/release
           cp gen/openapi/api.swagger.json "dist/release/startgrowingup-contracts-${GITHUB_REF_NAME}-openapi.swagger.json"
+          tar -czf "dist/release/startgrowingup-contracts-${GITHUB_REF_NAME}-go.tar.gz" -C gen go
+          tar -czf "dist/release/startgrowingup-contracts-${GITHUB_REF_NAME}-python.tar.gz" -C gen python
+          tar -czf "dist/release/startgrowingup-contracts-${GITHUB_REF_NAME}-java.tar.gz" -C gen java
+          tar -czf "dist/release/startgrowingup-contracts-${GITHUB_REF_NAME}-typescript.tar.gz" -C gen typescript
+          (
+            cd dist/release
+            sha256sum * > "startgrowingup-contracts-${GITHUB_REF_NAME}-sha256sums.txt"
+          )
 
       - name: Create or update GitHub Release
         run: |

@@ -13,6 +13,9 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  BUF_VERSION: "1.71.0"
+
 jobs:
   lint-and-breaking:
     name: Lint & Breaking
@@ -28,12 +31,25 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Run buf lint
         run: buf lint
 
+      - name: Determine breaking baseline
+        id: breaking-baseline
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "against=.git#ref=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "against=.git#ref=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "against=.git#branch=main" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run buf breaking
-        run: buf breaking --against 'https://github.com/${{ github.repository }}.git#branch=main'
+        run: buf breaking --against '${{ steps.breaking-baseline.outputs.against }}'
 
   generate:
     name: Generate
@@ -47,6 +63,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Generate code
         run: buf generate
@@ -68,6 +85,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Generate code
         run: buf generate
@@ -91,6 +109,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Generate code
         run: buf generate
@@ -177,6 +196,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Generate code
         run: buf generate

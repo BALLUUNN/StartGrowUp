@@ -15,6 +15,9 @@ concurrency:
   group: pages
   cancel-in-progress: true
 
+env:
+  BUF_VERSION: "1.71.0"
+
 jobs:
   build:
     name: Build Pages Artifact
@@ -28,6 +31,7 @@ jobs:
         uses: bufbuild/buf-setup-action@v1.50.0
         with:
           github_token: ${{ github.token }}
+          version: ${{ env.BUF_VERSION }}
 
       - name: Generate OpenAPI
         run: buf generate
